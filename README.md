@@ -1,16 +1,28 @@
-# FlowBots
+# Introduction
 
 This repo is all about optical flow. We are reimplementing FlowNet and FlowNet2 from scratch in Pytorch, as well as a Transformer-based version of FlowNet. 
 
+# Installation
 
-## Datasets
+All code was run in a conda environment. To replicate the exact environment, run the following commands in the Anaconda prompt:
+
+    conda env create -f environment.yml
+
+    conda activate flowbots
+
+Alternatively, the minimum essential packages are included in a requirements.txt file. This can be installed using pip
+
+    pip install -r requirements.txt
+
+
+# Datasets
 
 We use the following datasets:
 
 - Flying Chairs
 - Flying Things 3D
 
-# Flying Chairs
+## Flying Chairs
 
 The FlyingChairs dataset must be downloaded and organized in the following manner:
 
