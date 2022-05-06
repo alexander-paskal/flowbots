@@ -13,10 +13,11 @@ For more information on installing conda environments, see https://docs.conda.io
 
 # Datasets
 
-We use the following datasets:
+We use the following optical flow datasets:
 
 - Flying Chairs
 - Flying Things 3D
+- Sintel
 
 ## Flying Chairs
 
@@ -34,3 +35,57 @@ The FlyingChairs dataset must be downloaded and organized in the following manne
 The root file must be designated in the accompanying config.json file by setting the "flying_chairs" field
 
 For more information see https://pytorch.org/vision/stable/generated/torchvision.datasets.FlyingChairs.html
+
+
+## Flying Things 3D
+
+The FlyingThings3D dataset must be downloaded and organized in the following format:
+
+    root
+        FlyingThings3D
+            frames_cleanpass
+                TEST
+                TRAIN
+            frames_finalpass
+                TEST
+                TRAIN
+            optical_flow
+                TEST
+                TRAIN
+
+The torrent files can be obtained from https://academictorrents.com/userdetails.php?id=9551. We recommend only downloading the necessary files, as the downloads are quite large. The root file The root file must be designated in the accompanying config.json file by setting the "flying_things_3d" field. 
+
+
+## Sintel
+
+The Sintel dataset must be downloaded and organized in the following format:
+
+    root
+        Sintel
+            testing
+                clean
+                    scene_1
+                    scene_2
+                    ...
+                final
+                    scene_1
+                    scene_2
+                    ...
+            training
+                clean
+                    scene_1
+                    scene_2
+                    ...
+                final
+                    scene_1
+                    scene_2
+                    ...
+                flow
+                    scene_1
+                    scene_2
+                    ...
+
+
+The root file must be designated in the accompanying config.json file by setting the "sintel" field
+
+For more information see https://pytorch.org/vision/stable/generated/torchvision.datasets.Sintel.html
