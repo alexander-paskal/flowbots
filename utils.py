@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-def initialize(model_cls, *args, **kwargs):
+def initialize(model_cls, *args, weights="xavier", **kwargs):
     """
     Factory method for a neural network. Takes care of weight initialization, etc.
     :param cls: the network class to be initialized
