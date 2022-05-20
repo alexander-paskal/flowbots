@@ -5,9 +5,7 @@ def warping(img, flow):
 
 
     new_img = img.copy()
-    height, width = img.shape
-
-
+    *_, height, width = img.shape
 
     for i in range(height):
         for j in range(width):
