@@ -16,6 +16,8 @@ def warping(img, flow):
             x = flowx + i
             y = flowy + j
 
+            # if int(round(x)) > width:
+
             # bilinear coefficients
             theta_x = x - np.floor(x)
             theta_y = y - np.floor(y)
@@ -23,10 +25,10 @@ def warping(img, flow):
             theta_y_bar = 1 - theta_y
 
             new_img[int(round(x)), int(round(y))] = sum([
-                theta_x_bar*theta_y_bar * img[np.floor(x), np.floor(y)],
-                theta_x * theta_y_bar * img[np.ceil(x), np.floor(y)],
-                theta_x_bar * theta_y * img[np.floor(x), np.ceil(y)],
-                theta_x * theta_y * img[np.ceil(x), np.ceil(y)],
+                theta_x_bar*theta_y_bar * img[int(np.floor(x)), int(np.floor(y))],
+                theta_x * theta_y_bar * img[int(np.ceil(x)), int(np.floor(y))],
+                theta_x_bar * theta_y * img[int(np.floor(x)), int(np.ceil(y))],
+                theta_x * theta_y * img[int(np.ceil(x)), int(np.ceil(y))],
             ])
 
 
