@@ -2,6 +2,7 @@
 .ipynb_checkpoints/
 .__pycache__/
 *.pyc
-flownetS.py
+old/flownetS_nvidia.py
 config.json
 testing*
+old/

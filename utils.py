@@ -1,15 +1,17 @@
 import os
 import torch.nn as nn
 import torch
+import numpy as np
 import json
 from torch.utils.data import DataLoader
 from losses import epe_loss, f1_all
 from models import lookup
+import time
 
 
 class HardwareManager:
 
-    dtype = torch.float16
+    dtype = torch.float32
     use_gpu = True
 
     @classmethod
@@ -49,7 +51,7 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
     return model
 
 
-def train(model, optimizer, loader, epochs=1, print_every=100, val_loader=None, val_every=10):
+def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=10):
     """
     Ochestrates the train loop
     :return:
@@ -60,10 +62,15 @@ def train(model, optimizer, loader, epochs=1, print_every=100, val_loader=None, 
 
     model = model.to(device=device)  # move the model parameters to CPU/GPU
 
-    losses = []
+    losses = []  #
+    validations = []  # list of validations
 
+    best_loss = np.inf
+    best_params = None
 
     for e in range(epochs):
+        e_losses = []
+        s = time.time()
         for t, (x, y) in enumerate(loader):
             model.train()  # put model to training mode
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
@@ -72,21 +79,39 @@ def train(model, optimizer, loader, epochs=1, print_every=100, val_loader=None, 
             pred = model(x)
             loss = epe_loss(pred, y)
 
-            # Zero out all of the gradients for the variables which the optimizer
-            # will update.
-            optimizer.zero_grad()
-
-            # This is the backwards pass: compute the gradient of the loss with
-            # respect to each  parameter of the model.
             loss.backward()
+            if t % 10 == 0:
+                print(f"Iteration {t}")
+            if t % grad_accum == 0:  # for gradient accumulation
+                optimizer.step()
+                optimizer.zero_grad()
 
-            # Actually update the parameters of the model using the gradients
-            # computed by the backwards pass.
-            optimizer.step()
+            e_losses.append(loss.item())
+        avg_e_loss = sum(e_losses) / len(e_losses)
+        losses.append(avg_e_loss)
 
-            if t % print_every == 0:
-                print('Epoch %d, Iteration %d, loss = %.4f' % (e, t, loss.item()))
-                print()
+        # checkpointing
+        if avg_e_loss < best_loss:
+            best_loss = avg_e_loss
+            best_params = model.state_dict()
+
+        if e % print_every == 0:
+            print('Epoch {}, Loss = {:.3f}, train time = {:.3f} seconds'.format(e, avg_e_loss, time.time() - s))
+            print()
+        if val_loader is not None and e % val_every == 0:
+            results = evaluate(val_loader, model)
+            validations.append(results)
+            print("Validation Results: {}")
+
+        else:
+            validations.append(None)
+
+    model.load_state_dict(best_params)
+    return model, {
+        "losses": losses,
+        "validations": validations,
+        "best_params": best_params
+    }
 
 
 def evaluate(loader, model):
@@ -161,7 +186,6 @@ def load_model(name):
     model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth")))
 
     return model
-
 
 
 if __name__ == '__main__':
