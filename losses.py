@@ -30,9 +30,9 @@ def f1_all(pred, label):
     diff_percent = torch.divide(label, diff)  # calculates the difference in the metrics
 
     percent_error = diff_percent >= 0.05
-    pixel_error = diff >= 3
+    # pixel_error = diff >= 3
 
-    failure = torch.logical_and(percent_error, pixel_error)
+    failure = torch.logical_and(percent_error, percent_error)
     failure = torch.flatten(failure)
 
     ratios = torch.divide(torch.where(failure)[0].size(0), failure.size(0))

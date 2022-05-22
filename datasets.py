@@ -17,7 +17,7 @@ def flying_chairs(root=None, split="train"):
                 cfg = json.load(f)
         except FileNotFoundError:
             print("Could not load flying chairs data - config.json not found")
-
+            return
         root = cfg["flying_chairs"]
 
     dset = FlyingChairsModified(root,split=split)

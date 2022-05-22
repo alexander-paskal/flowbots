@@ -1,8 +1,10 @@
 import os
 import torch.nn as nn
 import torch
+import json
 from torch.utils.data import DataLoader
 from losses import epe_loss, f1_all
+from models import lookup
 
 
 class HardwareManager:
@@ -47,11 +49,47 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
     return model
 
 
-def train():
-    pass
+def train(model, optimizer, loader, epochs=1, print_every=100, val_loader=None, val_every=10):
+    """
+    Ochestrates the train loop
+    :return:
+    """
+
+    device = HardwareManager.get_device()
+    dtype = HardwareManager.get_dtype()
+
+    model = model.to(device=device)  # move the model parameters to CPU/GPU
+
+    losses = []
 
 
-def eval(loader, model):
+    for e in range(epochs):
+        for t, (x, y) in enumerate(loader):
+            model.train()  # put model to training mode
+            x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
+            y = y.to(device=device, dtype=dtype)
+
+            pred = model(x)
+            loss = epe_loss(pred, y)
+
+            # Zero out all of the gradients for the variables which the optimizer
+            # will update.
+            optimizer.zero_grad()
+
+            # This is the backwards pass: compute the gradient of the loss with
+            # respect to each  parameter of the model.
+            loss.backward()
+
+            # Actually update the parameters of the model using the gradients
+            # computed by the backwards pass.
+            optimizer.step()
+
+            if t % print_every == 0:
+                print('Epoch %d, Iteration %d, loss = %.4f' % (e, t, loss.item()))
+                print()
+
+
+def evaluate(loader, model):
     """
     Evaluates a model on a dataset
     :param loader:
@@ -68,7 +106,7 @@ def eval(loader, model):
     with torch.no_grad():
         for x, y in loader:
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
-            y = y.to(device=device, dtype=torch.int64)
+            y = y.to(device=device, dtype=dtype)
             pred = model(x)
 
             loss = epe_loss(pred, y).item()
@@ -82,7 +120,7 @@ def eval(loader, model):
         print(f"Eval Results:")
         print(f"EPE Loss: {round(avg_loss, 3)}, F1_all Error: %{round(avg_percent, 3) * 100}")
 
-    return {"epe": losses, "f1_all": f1_ratios}
+    return {"epe": avg_loss, "f1_all": f1_ratio}
 
 
 PARAMETERS_DIR = "parameters"
@@ -96,7 +134,34 @@ def save_model(model, name):
     if not os.path.exists(PARAMETERS_DIR):
         os.mkdir(PARAMETERS_DIR)
 
-    torch.save(model, os.path.join(name))
+    torch.save(model, os.path.join(PARAMETERS_DIR, name + ".pth"))
+
+    obj = {
+        "model": model.title
+    }
+
+    with open(os.path.join(PARAMETERS_DIR, name + ".json"), "w") as f:
+        json.dump(obj, f)
+
+
+def load_model(name):
+    """
+
+    :param name:
+    :return:
+    """
+
+    with open(os.path.join(PARAMETERS_DIR, name + ".json")) as f:
+        obj = json.load(f)
+
+    model_title = obj["model"]
+    model_cls = lookup[model_title]
+    model = model_cls()
+
+    model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth")))
+
+    return model
+
 
 
 if __name__ == '__main__':

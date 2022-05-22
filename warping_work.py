@@ -54,8 +54,6 @@ def warp_flow(img, flow):
 
 if __name__ == '__main__':
 
-    flow_im = flow.reshape(384,512,2)
-    print(flow_im.shape)
 
 
     #hsv = draw_hsv(flow_im)
@@ -68,9 +66,13 @@ if __name__ == '__main__':
 
     im2 = np.transpose(im2, (2, 0, 1))
     im1 = np.transpose(im1, (2,0,1))
-    error = np.linalg.norm(im2w - im2, axis=0).squeeze()
+    error = np.linalg.norm(im2w - im2, axis=0).squeeze()[None, :, :]
 
-    plt.imshow(error, cmap="gray_r")
+
+    input_to_s = np.concatenate([im1, im2w, im2, flow, error], axis=0)
+    print(input_to_s.shape)
+
+    plt.imshow(error.squeeze(), cmap="gray_r")
     plt.show()
 
 
