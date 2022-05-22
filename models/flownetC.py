@@ -1,5 +1,5 @@
 # Add official website of pytorch
-import decoder
+from .decoder import FlowNetDecoder
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -115,7 +115,7 @@ class FlowNetC(nn.Module):
         self.conv6 = conv_block(512, 1024, kernel_size = 3, stride = 2) #(N,512,12,16)-> (N,1024,6,8)
         self.conv6_1 = conv_block(1024, 1024) #(N,1024,6,8)-> (N,1024,6,8)
         
-        self.decode = decoder.FlowNetDecoder()
+        self.decode = FlowNetDecoder()
         
     def forward(self, x):
         #x1 = input_im[0:3]
@@ -161,13 +161,7 @@ class FlowNetC(nn.Module):
         
         
         return decoder_output
-    
-dummy_input = torch.rand(1, 6, 384, 512)
-dtype = torch.float
-device = torch.device("cpu")
-#pdb.set_trace()
-model=FlownetC()
-out = model.forward(dummy_input)
+
 
 
 
