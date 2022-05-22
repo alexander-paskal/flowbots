@@ -1,5 +1,7 @@
+import os
 import torch.nn as nn
 import torch
+from torch.utils.data import DataLoader
 from losses import epe_loss, f1_all
 
 
@@ -7,7 +9,6 @@ class HardwareManager:
 
     dtype = torch.float16
     use_gpu = True
-
 
     @classmethod
     def get_device(cls):
@@ -47,7 +48,6 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
 
 
 def train():
-
     pass
 
 
@@ -59,12 +59,8 @@ def eval(loader, model):
     :param params:
     :return:
     """
-    split = 'val' if loader.dataset.train else 'test'
-    print('Checking accuracy on the %s set' % split)
-
     device = HardwareManager.get_device()
     dtype = HardwareManager.get_dtype()
-
 
     losses = []
     f1_ratios = []
@@ -81,10 +77,35 @@ def eval(loader, model):
             f1_ratio = f1_all(pred, y).item()
             f1_ratios.append(f1_ratio)
 
-
         avg_loss = torch.tensor(losses).mean().item()
         avg_percent = torch.tensor(f1_ratios).mean().item()
         print(f"Eval Results:")
         print(f"EPE Loss: {round(avg_loss, 3)}, F1_all Error: %{round(avg_percent, 3) * 100}")
 
     return {"epe": losses, "f1_all": f1_ratios}
+
+
+PARAMETERS_DIR = "parameters"
+def save_model(model, name):
+    """
+    Saves the parameters of the model
+    :param model:
+    :param name:
+    :return:
+    """
+    if not os.path.exists(PARAMETERS_DIR):
+        os.mkdir(PARAMETERS_DIR)
+
+    torch.save(model, os.path.join(name))
+
+
+if __name__ == '__main__':
+    from datasets import flying_chairs
+
+    fc = flying_chairs(split="val")
+    dl = DataLoader(fc, 1, True)
+
+
+
+
+
