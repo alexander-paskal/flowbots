@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def warping(img, flow):
+def warping_them(img, flow):
 
 
     new_img = img.copy()
@@ -33,3 +33,27 @@ def warping(img, flow):
 
 
             return new_img
+
+
+def warping_me(img, flow):
+
+
+    new_img = np.zeros(img.shape)
+    *_, height, width = img.shape
+
+    for i in range(height):
+        for j in range(width):
+            flowy, flowx = flow[:, i, j]
+
+            #
+            x = round(flowx + i)
+            y = round(flowy + j)
+
+            if 0 <= x < height and 0 <= y < width:
+                rgb = img[:, i, j]
+                new_img[:, x, y] = rgb
+                # print((i, j), rgb, (x, y))
+            else:
+                pass
+
+    return new_img

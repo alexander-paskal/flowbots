@@ -1,27 +1,14 @@
 import cv2
-import numpy as np
-from imageio import imread
-
-
-import torch
 import torchvision as tv
 import matplotlib.pyplot as plt
 import numpy as np
 
 import json
 
-from warping import warping
-import os
-os.listdir()
-#os.chdir("C:\\\\Users\\kevin\\OneDrive\\Documents\\ECE 285\\project_work\\datasets")
-os.chdir("D:\\\\datasets")
-d = {"flying_chairs": os.getcwd()}
-with open("config.json", "w") as f:
-    json.dump(d, f)
-    
+from warping import warping_them, warping_me
+
 with open("config.json") as f:
     cfg = json.load(f)
-print(cfg)
 fc = tv.datasets.FlyingChairs(cfg["flying_chairs"])
 
 a=fc[0][0]
@@ -31,12 +18,13 @@ flow=fc[0][2]
 im1 = np.array(a.getdata())
 im2 = np.array(b.getdata())
 
+
+
+
 im1 = im1.reshape([a.size[1], a.size[0], 3])
 im2 = im2.reshape([b.size[1], b.size[0], 3])
 
 
-im1 = np.float64(im1)
-im2 = np.float64(im2)
 
 
 
@@ -63,16 +51,32 @@ def warp_flow(img, flow):
     res = warping(img, flow)
     return res
 
-flow_im = flow.reshape(384,512,2)
-print(flow_im.shape)
+
+if __name__ == '__main__':
+
+    flow_im = flow.reshape(384,512,2)
+    print(flow_im.shape)
 
 
-#hsv = draw_hsv(flow_im)
-im1_test = np.transpose(im1, (2,0,1))
-im2w = warp_flow(im1_test, flow)
-cv2.imshow("image1", im2w/255)
-#cv2.waitKey(0)
-#cv2.imwrite("project_workflow.jpg",hsv/255)
-#cv2.imwrite("im1.jpg", im1/255)
-#cv2.imwrite("im2.jpg", im2/255)
-#cv2.imwrite("im2w.jpg", im2w/255)
+    #hsv = draw_hsv(flow_im)
+    im1_test = np.transpose(im1, (2,0,1))
+    im2w = warping_me(im1_test, flow).astype(np.uint8)
+    # plt.hist(im1_test.flatten(), bins=100)
+    # # plt.show()
+    # plt.hist(im2w.flatten(), bins=100, alpha=0.3)
+    # plt.show()
+
+    im2 = np.transpose(im2, (2, 0, 1))
+    im1 = np.transpose(im1, (2,0,1))
+    error = np.linalg.norm(im2w - im2, axis=0).squeeze()
+
+    plt.imshow(error, cmap="gray_r")
+    plt.show()
+
+
+
+    #cv2.waitKey(0)
+    #cv2.imwrite("project_workflow.jpg",hsv/255)
+    #cv2.imwrite("im1.jpg", im1/255)
+    #cv2.imwrite("im2.jpg", im2/255)
+    #cv2.imwrite("im2w.jpg", im2w/255)
