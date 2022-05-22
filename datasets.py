@@ -43,5 +43,7 @@ class FlyingChairsModified(FlyingChairs):
         flow[0, :, :] /= im1.size(1)
         flow[1, :, :] /= im1.size(2)
 
-        return im1, im2, flow
+        im_concat = torch.cat([im1, im2], dim=0)
+
+        return im_concat, flow
 

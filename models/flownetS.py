@@ -18,6 +18,9 @@ class ConvBlock(nn.Module):
 
 
 class FlowNetS(nn.Module):
+
+    title = "flownet-s"
+
     def __init__(self, in_channels=6):
         super().__init__()
         self.conv1 = ConvBlock(in_channels, 64, kernel_size=7, stride=2, padding=3)

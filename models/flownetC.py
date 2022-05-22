@@ -91,7 +91,10 @@ def correlate(input1, input2):
     out_corr = out_corr.view(b, ph * pw, h, w)/input1.size(1)
     return F.leaky_relu_(out_corr, 0.1)
 
-class FlownetC(nn.Module): 
+class FlowNetC(nn.Module):
+
+    title = "flownet-c"
+
     def __init__(self, in_channels = 12):
         super().__init__()
 
