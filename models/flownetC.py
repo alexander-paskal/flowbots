@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 
 import numpy as np
-from spatial_correlation_sampler import spatial_correlation_sample
+# from spatial_correlation_sampler import spatial_correlation_sample
 
 
 def conv_block(in_planes, out_planes, kernel_size=3, stride=1):
