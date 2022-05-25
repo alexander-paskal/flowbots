@@ -26,11 +26,10 @@ class HardwareManager:
     @property
     def dtype(cls):
         if cls.use_gpu and torch.cuda.is_available():
-            dtype = torch.float16
-
+            # dtype = torch.float16
+            dtype = torch.float32
         else:
             dtype = torch.float32
-
         return dtype
 
 
@@ -73,8 +72,14 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
 
     for e in range(epochs):
         print(f"Epoch {e+1}")
-        yield model, "hello", "there"
-        continue
+
+
+        # yield model, "hello", "there"
+        # import time
+        # time.sleep(5)
+        # continue
+
+
         e_losses = []
         s = time.time()
         for t, (x, y) in enumerate(loader):
@@ -88,7 +93,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
 
             if verbose:
                 if t % 10 == 0:
-                    print(f"Iteration {t}, loss {loss}, ")
+                    print(f"Iteration {t}, loss {loss}")
 
             if t % grad_accum == 0:  # for gradient accumulation
                 optimizer.step()
@@ -129,7 +134,7 @@ def evaluate(loader, model):
     :return:
     """
     device = HardwareManager.get_device()
-    dtype = HardwareManager.get_dtype()
+    dtype = HardwareManager.dtype
 
     losses = []
     f1_ratios = []
