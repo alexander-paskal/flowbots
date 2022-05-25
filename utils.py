@@ -11,7 +11,6 @@ import time
 
 class HardwareManager:
 
-    dtype = torch.float32
     use_gpu = True
 
     @classmethod
@@ -24,8 +23,15 @@ class HardwareManager:
         return device
 
     @classmethod
-    def get_dtype(cls):
-        return cls.dtype
+    @property
+    def dtype(cls):
+        if cls.use_gpu and torch.cuda.is_available():
+            dtype = torch.float16
+
+        else:
+            dtype = torch.float32
+
+        return dtype
 
 
 def initialize(model_cls, *args, weights="xavier", **kwargs):
@@ -51,24 +57,24 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
     return model
 
 
-def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=10):
+def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=1, verbose=False):
     """
     Ochestrates the train loop
     :return:
     """
 
     device = HardwareManager.get_device()
-    dtype = HardwareManager.get_dtype()
+    dtype = HardwareManager.dtype
 
     model = model.to(device=device)  # move the model parameters to CPU/GPU
 
-    losses = []  #
-    validations = []  # list of validations
-
     best_loss = np.inf
-    best_params = None
+    best_params = model.state_dict()
 
     for e in range(epochs):
+        print(f"Epoch {e+1}")
+        yield model, "hello", "there"
+        continue
         e_losses = []
         s = time.time()
         for t, (x, y) in enumerate(loader):
@@ -78,17 +84,19 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
 
             pred = model(x)
             loss = epe_loss(pred, y)
-
             loss.backward()
-            if t % 10 == 0:
-                print(f"Iteration {t}")
+
+            if verbose:
+                if t % 10 == 0:
+                    print(f"Iteration {t}, loss {loss}, ")
+
             if t % grad_accum == 0:  # for gradient accumulation
                 optimizer.step()
                 optimizer.zero_grad()
 
             e_losses.append(loss.item())
         avg_e_loss = sum(e_losses) / len(e_losses)
-        losses.append(avg_e_loss)
+
 
         # checkpointing
         if avg_e_loss < best_loss:
@@ -99,19 +107,17 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
             print('Epoch {}, Loss = {:.3f}, train time = {:.3f} seconds'.format(e, avg_e_loss, time.time() - s))
             print()
         if val_loader is not None and e % val_every == 0:
-            results = evaluate(val_loader, model)
-            validations.append(results)
-            print("Validation Results: {}")
+            val_results = evaluate(val_loader, model)
+            print(f"Validation Results: {val_results}")
 
         else:
-            validations.append(None)
+            val_results = None
 
-    model.load_state_dict(best_params)
-    return model, {
-        "losses": losses,
-        "validations": validations,
-        "best_params": best_params
-    }
+        cur_params = model.state_dict()  # save current parameters
+
+        model.load_state_dict(best_params)  # load and yield the best model parameters
+        yield model, avg_e_loss, val_results
+        model.load_state_dict(cur_params)
 
 
 def evaluate(loader, model):
@@ -148,8 +154,8 @@ def evaluate(loader, model):
     return {"epe": avg_loss, "f1_all": f1_ratio}
 
 
-PARAMETERS_DIR = "parameters"
-def save_model(model, name):
+PARAMETERS_DIR = "weights"
+def save_model(model, name, info):
     """
     Saves the parameters of the model
     :param model:
@@ -159,11 +165,12 @@ def save_model(model, name):
     if not os.path.exists(PARAMETERS_DIR):
         os.mkdir(PARAMETERS_DIR)
 
-    torch.save(model, os.path.join(PARAMETERS_DIR, name + ".pth"))
+    torch.save(model.state_dict(), os.path.join(PARAMETERS_DIR, name + ".pth"))
 
     obj = {
-        "model": model.title
+        "architecture": model.title
     }
+    obj.update(info)
 
     with open(os.path.join(PARAMETERS_DIR, name + ".json"), "w") as f:
         json.dump(obj, f)
@@ -177,15 +184,15 @@ def load_model(name):
     """
 
     with open(os.path.join(PARAMETERS_DIR, name + ".json")) as f:
-        obj = json.load(f)
+        info = json.load(f)
 
-    model_title = obj["model"]
+    model_title = info["architecture"]
     model_cls = lookup[model_title]
     model = model_cls()
 
     model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth")))
 
-    return model
+    return model, info
 
 
 if __name__ == '__main__':
