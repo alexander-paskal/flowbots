@@ -6,3 +6,5 @@ old/flownetS_nvidia.py
 config.json
 testing*
 old/
+bin/
+weights/
