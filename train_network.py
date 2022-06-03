@@ -34,10 +34,10 @@ if __name__ == '__main__':
 
     print("loading dataset")
     train_dataset = flying_chairs(split="train")
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
     val_dataset = flying_chairs(split="val")
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
     print(f"Iterations per training epoch: {int(math.ceil(len(train_dataset) / BATCH_SIZE))}")
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     print("Training")
     for model, train_loss, train_validation in train(
-            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE):
+            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE, val_loader=val_loader):
         losses.append(train_loss)
         validations.append(train_validation)
         epochs_trained += 1
