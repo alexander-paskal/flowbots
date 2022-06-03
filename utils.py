@@ -56,7 +56,7 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
     return model
 
 
-def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=1, verbose=False):
+def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=4, verbose=False):
     """
     Ochestrates the train loop
     :return:
@@ -69,6 +69,9 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
 
     best_loss = np.inf
     best_params = model.state_dict()
+
+    # change to MSEloss
+    mse_loss = nn.MSELoss()
 
     for e in range(epochs):
         print(f"Epoch {e+1}")
@@ -88,7 +91,8 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
             y = y.to(device=device, dtype=dtype)
 
             pred = model(x)
-            loss = epe_loss(pred, y)
+            # loss = epe_loss(pred, y)
+            loss = mse_loss(pred.flatten(), y.flatten())
             loss.backward()
 
             if verbose:
