@@ -195,7 +195,7 @@ def load_model(name):
     model_cls = lookup[model_title]
     model = model_cls()
 
-    model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth")))
+    model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth"), map_location=torch.device("cpu")))
 
     return model, info
 
