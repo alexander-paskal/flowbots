@@ -12,7 +12,9 @@ def epe_loss(pred, label):
     :param label:
     :return:
     """
-    loss = torch.norm(label - pred, p=2, dim=1).mean()
+    pixel_loss=torch.nn.L1Loss(size_average=False, reduce=False)
+    loss = pixel_loss(pred,label).mean()
+    #loss = torch.norm(label - pred, p=2, dim=1).mean()
     return loss
 
 
