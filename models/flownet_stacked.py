@@ -4,6 +4,12 @@ import torch
 import torch.nn.functional as F
 
 
+if torch.cuda.is_available():
+    DEVICE = torch.device("cuda")
+else:
+    DEVICE = torch.device("cpu")
+
+
 class WarpingLayer(nn.Module):
     def forward(self, x):
         """
@@ -23,12 +29,12 @@ class WarpingLayer(nn.Module):
         return output
 
     @staticmethod
-    def warping(img, flow, interp=True):
+    def warping(img, flow, interp=False):
         """
         Performs warping on an image
         """
 
-        new_img = torch.zeros(img.size())
+        new_img = torch.zeros(img.size()).to(DEVICE)
         *_, height, width = img.size()
 
         for i in range(height):
@@ -60,6 +66,7 @@ class FlownetStacked(Base):
         if frozen is None:
             frozen = [False for _ in args]
 
+        self.warping = warping
         if warping:
             dims = 12
         else:
@@ -73,24 +80,25 @@ class FlownetStacked(Base):
         if isinstance(first_model, type):  # passed a CLASS and not an INSTANCE
             first_model = first_model()
             if frozen[0]:
-                for parameter in first_model.features.parameters():
+                for parameter in first_model.parameters():
                     parameter.requires_grad = False
 
-        models = [first_model]
+        models = nn.ModuleList()
+        models.append(first_model)
 
         for i, arg in enumerate(args[1:]):  # for all other models passed
             if isinstance(arg, type):  # passed a model class and not an instance
                 arg = arg(dims)
-            if warping:
-                warping_layer = WarpingLayer()
-                models.append(warping_layer)
+
             models.append(arg)
 
             if frozen[i + 1]:
-                for parameter in arg.features.parameters:
+                for parameter in arg.parameters:
                     parameter.requires_grad = False
 
-        self.sequential = nn.Sequential(*models)
+        # self.sequential = nn.Sequential(*models)
+        self.models = models
+        self.warping_layer = WarpingLayer()
 
     def forward(self, x):
         """
@@ -99,5 +107,17 @@ class FlownetStacked(Base):
         :return:
         """
 
-        return self.sequential(x)
+        im1 = x[:, :3, :, :]
+        im2 = x[:, 3:, :, :]
+
+        for i, model in enumerate(self.models):
+            flow = model(x)
+            if i == len(self.models) - 1:
+                break
+
+            x = torch.concat([im1, im2, flow], dim=1)  # N x 8 x H x W
+            if self.warping:
+                x = self.warping_layer.forward(x)  # -> N x 12 x H x W
+
+        return flow
 
