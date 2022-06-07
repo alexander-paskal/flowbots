@@ -1,5 +1,6 @@
 # Add official website of pytorch
 from .decoder import FlowNetDecoder
+from .base import Base
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -91,7 +92,7 @@ def correlate(input1, input2):
     out_corr = out_corr.view(b, ph * pw, h, w)/input1.size(1)
     return F.leaky_relu_(out_corr, 0.1)
 
-class FlowNetC(nn.Module):
+class FlowNetC(Base):
 
     title = "flownet-c"
 

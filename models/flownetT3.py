@@ -1,62 +1,37 @@
 import torch.nn as nn
 import torch
 from .decoder import FlowNetDecoder
-#import decoder as d
-#from utils import HardwareManager
+from .base import Base
 
-# Initialize the attention module as a nn.Module subclass
+
+
 import math
 class Attention(nn.Module):
     def __init__(self, in_channels):
         super().__init__()
-        
-        # TODO: Implement the Key, Query and Value linear transforms as 1x1 convolutional layers
-        
-        # Hint: channel size remains constant throughout
+
         self.conv_query = nn.Conv2d(in_channels, in_channels, kernel_size = 1)
         self.conv_key = nn.Conv2d(in_channels, in_channels, kernel_size = 1)
         self.conv_value = nn.Conv2d(in_channels, in_channels, kernel_size = 1)
 
     def forward(self, x):
         N, C, H, W = x.shape
-        #x = x.view(H*W,C)
-        #print('x shape')
-        #print(x.shape)
-        # TODO: Pass the input through conv_query, reshape the output volume to (N, C, H*W)
         q = self.conv_query(x)
-        #print(q.shape)
         q = q.view(N, C, H*W)
-        #print('Q shape')
-        #print(q.shape)
         q = q.permute(0,2,1)
-        #print(q.shape)
-        # TODO: Pass the input through conv_key, reshape the output volume to (N, C, H*W)
         k = self.conv_key(x)
         k = k.view(N,C,H*W)
-        #print('K shape')
-        #print(k.shape)
         k = k.permute(0,2,1)
         
-        # TODO: Pass the input through conv_value, reshape the output volume to (N, C, H*W)
         v = self.conv_value(x)
         v = v.view(N,C,H*W)
-        #print('V shape')
-        #print(v.shape)
         v = v.permute(0,2,1)
-        # TODO: Implement the above formula for attention using q, k, v, C
-        # NOTE: The X in the formula is already added for you in the return line
-        test_tensor = torch.matmul(q,k.permute(0,2,1))
-        #print(test_tensor.shape)
+
         tensor_1 = torch.matmul(q,k.permute(0,2,1))/math.sqrt(C)
         tensor_2 = torch.nn.functional.softmax(tensor_1)
         attention = torch.matmul(tensor_2,v)
-        #print('attention shape')
-        #print(attention.shape)
-        # Reshape the output to (N, C, H, W) before adding to the input volume
+
         attention = attention.reshape(N, C, H, W)
-        h=x+attention
-        #print('h shape')
-        #print(h.shape)
         return x + attention
 
 class ConvBlock(nn.Module):
@@ -114,6 +89,4 @@ class FlowNetT(nn.Module):
             [x1, x2, x3, x4, x5, x6]
         )
         return x
-#atest = torch.rand(16, 6, 384, 512)
-#model = FlowNetT()
-#bleh = model.forward(atest)
+

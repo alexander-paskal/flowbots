@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 from .decoder import FlowNetDecoder
-
+from .base import Base
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels,*args, **kwargs):
@@ -17,7 +17,7 @@ class ConvBlock(nn.Module):
         return x
 
 
-class FlowNetS(nn.Module):
+class FlowNetS(Base):
 
     title = "flownet-s"
 
