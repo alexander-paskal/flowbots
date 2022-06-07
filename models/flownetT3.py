@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
-#from .decoder import FlowNetDecoder
-import decoder as d
+from .decoder import FlowNetDecoder
+#import decoder as d
 #from utils import HardwareManager
 
 # Initialize the attention module as a nn.Module subclass
@@ -72,6 +72,8 @@ class ConvBlock(nn.Module):
         if attention:
             attention_layer = Attention(out_channels)
             layers.append(attention_layer)
+            layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.LeakyReLU(0.1, inplace=True))
 
 
         self.block = nn.Sequential(*layers)
@@ -83,7 +85,7 @@ class ConvBlock(nn.Module):
 
 class FlowNetT(nn.Module):
 
-    title = "flownet-s"
+    title = "flownet-t"
 
     def __init__(self, in_channels=6):
         super().__init__()
@@ -98,7 +100,7 @@ class FlowNetT(nn.Module):
         self.conv6_1 = ConvBlock(512, 1024, kernel_size=3, stride=2, padding=1)
         self.conv6_2 = ConvBlock(1024, 1024, kernel_size=3, padding=1)
 
-        self.decoder = d.FlowNetDecoder()
+        self.decoder = FlowNetDecoder()
 
     def forward(self, x):
         x1 = self.conv1(x)
