@@ -57,3 +57,36 @@ def warping_me(img, flow):
                 pass
 
     return new_img
+
+
+
+def warping(img, flow, interp=True):
+    """
+    Performs warping on an image
+    """
+
+    new_img = torch.zeros(img.size())
+    *_, height, width = img.size()
+
+    for i in range(height):
+        for j in range(width):
+            flow_ij = flow[:, :, i, j]  # -> N x 2
+            FLOWY = flow_ij[0]  # N x 1
+            FLOWX = flow_ij[1]  # N x 1
+            
+            for n, (flowx, flowy) in enumerate(zip(FLOWX.tolist(), FLOWY.tolist())):
+                x = round(flowx + i)
+                y = round(flowy + j)
+                if 0 <= x < height and 0 <= y < width:
+                    rgb = img[n, :, i, j]
+                    new_img[n, :, x, y] = rgb
+                    # print((i, j), rgb, (x, y))
+                else:
+                    pass
+            
+    # interpolation
+    if interp:
+        new_img = F.interpolate(new_img, size=(384, 512), mode="bilinear")
+
+    
+    return new_img
