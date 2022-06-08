@@ -28,16 +28,17 @@ if __name__ == '__main__':
     class args:
         epochs = 10
         grad_accum = 1
-        model_name = "test-stacked-0606"
+        model_name = "simple_s_test_newest_loss"
         verbose = 'true'
         learning_rate = 0.001
         batch_size = 30
+        architecture = 'flownet-s'
 
 
     EPOCHS = args.epochs
     GRAD_ACCUM = args.grad_accum
     MODEL_NAME = args.model_name
-    # ARCHITECTURE = args.architecture
+    ARCHITECTURE = args.architecture
     VERBOSE = True if args.verbose == "true" else False
     LEARNING_RATE = args.learning_rate
     BATCH_SIZE = args.batch_size
@@ -54,24 +55,25 @@ if __name__ == '__main__':
     print(f"Training on: {HardwareManager.get_device()}")
 
     print("instantiating model")
-    # try:
-    #     model, info = load_model(MODEL_NAME)
-    #     losses = info["losses"]
-    #     validations = info["validations"]
-    #     epochs_trained = info["epochs_trained"]
-    #
-    #     print("Model loaded successfully!")
-    # except FileNotFoundError:
-    #     print("Could not locate model, initializing new.")
-    #
-    #     # if ARCHITECTURE is None:
-    #     #     print("architecture not specified. Exiting.")
-    #     #     sys.exit(-1)
-    #
-    #     # model_cls = lookup[ARCHITECTURE]
-    #     # model = initialize(model_cls)
-
-    model = FlownetStacked(FlowNetS, FlowNetS, warping=True, frozen=[False, False])
+    try:
+        model_unstacked, info = load_model(MODEL_NAME)
+        losses = info["losses"]
+        validations = info["validations"]
+        epochs_trained = info["epochs_trained"]
+    
+        print("Model loaded successfully!")
+    except FileNotFoundError:
+        print("Could not locate model, initializing new.")
+    
+        if ARCHITECTURE != 'flownet-s':
+            print("architecture must be flownet. Exiting.")
+            sys.exit(-1)
+    
+        model_cls = lookup[ARCHITECTURE]
+        model_unstacked = initialize(model_cls)
+   
+    
+    model = FlownetStacked(model_unstacked, model_unstacked, warping=True, frozen=[False, False])
 
     losses = []
     validations = []
