@@ -87,6 +87,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
         e_losses = []
         s = time.time()
         for t, (x, y) in enumerate(loader):
+            torch.cuda.empty_cache()
             model.train()  # put model to training mode
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=dtype)
