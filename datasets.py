@@ -64,8 +64,6 @@ class FlyingChairsModified(FlyingChairs):
         flow = T.ToTensor()(flow)
         flow = torch.transpose(flow, 0, 1)
         flow = torch.transpose(flow, 1, 2)
-        # flow[0, :, :] /= im1.size(1)
-        # flow[1, :, :] /= im1.size(2)
 
         im_concat = torch.cat([im1, im2], dim=0)
 

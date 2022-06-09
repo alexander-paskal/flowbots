@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 import numpy as np
 import json
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from losses import epe_loss, f1_all
 from models import lookup
@@ -164,7 +165,7 @@ def evaluate(loader, model):
 
 
 PARAMETERS_DIR = "weights"
-def save_model(model, name, info):
+def save_model(model, name, info=None):
     """
     Saves the parameters of the model
     :param model:
@@ -173,6 +174,9 @@ def save_model(model, name, info):
     """
     if not os.path.exists(PARAMETERS_DIR):
         os.mkdir(PARAMETERS_DIR)
+
+    if info is None:
+        info = {}
 
     torch.save(model.state_dict(), os.path.join(PARAMETERS_DIR, name + ".pth"))
 
@@ -202,6 +206,27 @@ def load_model(name):
     model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth"), map_location=torch.device("cpu")))
 
     return model, info
+
+
+def display_flow(flow):
+    flow_im = np.concatenate([flow, np.zeros((1, *flow.shape[1:]))], axis=0)
+    flow_im = np.transpose(flow_im, (1, 2, 0))
+    print(flow_im.shape)
+
+    plt.hist(flow_im.flatten(), bins=100)  # for visualizing the distribution of values, just for troubleshooting
+    plt.title("Flow Values")
+    plt.show()
+
+    xdim, ydim, _ = flow_im.shape
+    # normalize horizontal and vertical flows by their respective image dimensions
+    # flow_im[:, :, 0] = flow_im[:, :, 0] / xdim
+    # flow_im[:, :, 1] = flow_im[:, :, 1] / ydim
+
+    # normalize to between one and 0 for image display, this is NOT to be done with the training data
+
+
+    plt.imshow(flow_im)
+    plt.show()
 
 
 if __name__ == '__main__':
