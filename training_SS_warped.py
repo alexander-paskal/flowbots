@@ -37,7 +37,7 @@ if __name__ == '__main__':
         architecture = 'flownet-s'
 
 
-    HardwareManager.use_gpu = False
+    HardwareManager.use_gpu = True
 
     EPOCHS = args.epochs
     GRAD_ACCUM = args.grad_accum
@@ -46,6 +46,8 @@ if __name__ == '__main__':
     VERBOSE = True if args.verbose == "true" else False
     LEARNING_RATE = args.learning_rate
     BATCH_SIZE = args.batch_size
+
+
 
     print("loading dataset")
     train_dataset = flying_chairs(split="train")
@@ -82,7 +84,7 @@ if __name__ == '__main__':
     for model, train_loss, train_validation in train(
             model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE,
             val_loader=val_loader,
-            print_loss=1):
+            print_loss=10):
         losses.append(train_loss)
         validations.append(train_validation)
         epochs_trained += 1
