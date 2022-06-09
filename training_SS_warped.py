@@ -9,7 +9,8 @@ from utils import HardwareManager, train, initialize, save_model, load_model
 import sys
 import math
 import argparse
-
+import os
+import json
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train a network')
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='the learning rate to be used')
     parser.add_argument('--verbose', '-v', default='true', help='prints out the loss every 10 minibatches')
     parser.add_argument('--grad-accum', '-g', default=1, type=int, help='The gradient accumulation rate. Default is 1')
+
 
     # args = parser.parse_args()
     class args:
@@ -56,36 +58,31 @@ if __name__ == '__main__':
 
     print(f"Training on: {HardwareManager.get_device()}")
 
-    print("instantiating model")
     try:
-        model_unstacked, info = load_model(MODEL_NAME)
+        with open(os.path.join("weights", MODEL_NAME + ".json")) as f:
+            info = json.load(f)
         losses = info["losses"]
         validations = info["validations"]
         epochs_trained = info["epochs_trained"]
-    
         print("Model loaded successfully!")
     except FileNotFoundError:
         print("Could not locate model, initializing new.")
-    
+
         if ARCHITECTURE != 'flownet-s':
             print("architecture must be flownet. Exiting.")
             sys.exit(-1)
-    
+
         model_cls = lookup[ARCHITECTURE]
         model_unstacked = initialize(model_cls)
-   
-    
-    model = FlownetStacked(model_unstacked, FlowNetS, warping=True, frozen=[True, False])
 
-    losses = []
-    validations = []
-    epochs_trained = 0
+    model = FlownetStacked(model_unstacked, FlowNetS, warping=True, frozen=[True, False])
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     print("Training")
     for model, train_loss, train_validation in train(
-            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE, val_loader=val_loader,
-    print_loss=1):
+            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE,
+            val_loader=val_loader,
+            print_loss=1):
         losses.append(train_loss)
         validations.append(train_validation)
         epochs_trained += 1

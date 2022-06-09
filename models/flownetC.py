@@ -13,7 +13,10 @@ import torch.nn.functional as F
 
 
 import numpy as np
-from spatial_correlation_sampler import spatial_correlation_sample
+try:
+    from spatial_correlation_sampler import spatial_correlation_sample
+except ModuleNotFoundError:
+    print("Spatial Correlation Sampler not found, FlowNetC not functional")
 
 
 def conv_block(in_planes, out_planes, kernel_size=3, stride=1):

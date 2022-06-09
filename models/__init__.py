@@ -8,5 +8,7 @@ lookup = {
     FlowNetS.title: FlowNetS,
     FlowNetC.title: FlowNetC,
     FlowNetT.title: FlowNetT,
+    FlownetStacked.title: FlownetStacked,
     FlownetSS.title: FlownetSS
+    
 }
