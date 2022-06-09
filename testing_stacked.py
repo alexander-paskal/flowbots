@@ -31,9 +31,11 @@ if __name__ == '__main__':
         model_name = "simple_s_test_newest_loss"
         verbose = 'true'
         learning_rate = 0.001
-        batch_size = 30
+        batch_size = 10
         architecture = 'flownet-s'
 
+
+    HardwareManager.use_gpu = False
 
     EPOCHS = args.epochs
     GRAD_ACCUM = args.grad_accum
@@ -73,7 +75,7 @@ if __name__ == '__main__':
         model_unstacked = initialize(model_cls)
    
     
-    model = FlownetStacked(model_unstacked, model_unstacked, warping=True, frozen=[False, False])
+    model = FlownetStacked(model_unstacked, FlowNetS, warping=True, frozen=[True, False])
 
     losses = []
     validations = []
@@ -82,7 +84,8 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     print("Training")
     for model, train_loss, train_validation in train(
-            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE, val_loader=val_loader):
+            model, optimizer, train_loader, epochs=EPOCHS, grad_accum=GRAD_ACCUM, verbose=VERBOSE, val_loader=val_loader,
+    print_loss=1):
         losses.append(train_loss)
         validations.append(train_validation)
         epochs_trained += 1
@@ -93,7 +96,7 @@ if __name__ == '__main__':
             "epochs_trained": epochs_trained,
         }
 
-        save_model(model, MODEL_NAME, info=info)
+        # save_model(model, MODEL_NAME, info=info)
 
     print("Training completed")
 
