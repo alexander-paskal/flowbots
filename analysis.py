@@ -1,10 +1,10 @@
-from utils import evaluate, load_model
-from datasets import flying_chairs, sintel
+from utils import evaluate, load_model, HardwareManager
+from datasets import flying_chairs, sintel, hd1k
 from torch.utils.data import DataLoader
 import torch
 
-
-dataset = sintel(pass_name="final")
+HardwareManager.use_gpu = True
+dataset = hd1k()
 model, info = load_model("flownet-ss-first-0607")
 print("Dataset length:",len(dataset))
 dloader = DataLoader(dataset, batch_size=10)
