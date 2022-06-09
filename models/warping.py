@@ -61,4 +61,6 @@ class WarpingLayer:
                 warped_channel[warped_inds] = im_channel[image_inds]
                 warped_im[:, channel, :, :] = warped_channel.view((B, H, W))
 
+        # del warped_inds, image_inds, has_flow, warped_channel, im_channel, offset, flow_ind_shift
+
         return warped_im
