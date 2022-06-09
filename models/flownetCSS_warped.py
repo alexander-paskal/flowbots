@@ -29,9 +29,9 @@ def load_net1(name):
     return model
 
 
-class FlownetCSS(Base):
+class FlownetCSSWarped(Base):
 
-    title = "flownet-css"
+    title = "flownet-css-warped"
 
     def __init__(self):
         super().__init__()
