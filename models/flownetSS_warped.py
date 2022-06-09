@@ -12,17 +12,13 @@ NET1 = "simple_s"
 PARAMETERS_DIR = "weights"
 def load_net1(name):
     """
-
     :param name:
     :return:
     """
-
-
     model_cls = FlowNetS
     model = model_cls()
 
     model.load_state_dict(torch.load(os.path.join(PARAMETERS_DIR, name + ".pth"), map_location=torch.device("cpu")))
-
     return model
 
 
