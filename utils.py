@@ -57,7 +57,7 @@ def initialize(model_cls, *args, weights="xavier", **kwargs):
     return model
 
 
-def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=4, verbose=False):
+def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_loader=None, val_every=4, verbose=False, print_loss=10):
     """
     Ochestrates the train loop
     :return:
@@ -97,7 +97,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
             loss.backward()
 
             if verbose:
-                if t % 10 == 0:
+                if t % print_loss == 0:
                     print(f"Iteration {t}, loss {loss}")
 
             if t % grad_accum == 0:  # for gradient accumulation
@@ -114,7 +114,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
             best_params = model.state_dict()
 
         if e % print_every == 0:
-            print('Epoch {}, Loss = {:.3f}, train time = {:.3f} seconds'.format(e, avg_e_loss, time.time() - s))
+            print('Epoch {}, Loss = {:.3f}, train time = {:.3f} seconds'.format(e+1, avg_e_loss, time.time() - s))
             print()
         if val_loader is not None and e % val_every == 0:
             val_results = evaluate(val_loader, model)
@@ -130,7 +130,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
         model.load_state_dict(cur_params)
 
 
-def evaluate(loader, model):
+def evaluate(loader, model, verbose=False):
     """
     Evaluates a model on a dataset
     :param loader:
@@ -145,14 +145,16 @@ def evaluate(loader, model):
     f1_ratios = []
 
     with torch.no_grad():
-        for x, y in loader:
+        for i, (x, y) in enumerate(loader):
+
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=dtype)
+            model = model.to(device)
             pred = model(x)
-
             loss = epe_loss(pred, y).item()
             losses.append(loss)
-
+            if verbose and i % 10 == 0:
+                print(f"Iteration {i}, loss {loss}")
             f1_ratio = f1_all(pred, y).item()
             f1_ratios.append(f1_ratio)
 
