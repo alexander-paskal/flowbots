@@ -3,14 +3,14 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
-
-if torch.cuda.is_available():
+USE_GPU = False
+if torch.cuda.is_available() and USE_GPU:
     DEVICE = torch.device("cuda")
 else:
     DEVICE = torch.device("cpu")
 
 
-class WarpingLayer(nn.Module):
+class WarpingLayer:
     def forward(self, x):
         """
         Warps image 1
@@ -29,34 +29,38 @@ class WarpingLayer(nn.Module):
         return output
 
     @staticmethod
-    def warping(img, flow, interp=False):
+    def warping(image, flow, interp=False):
         """
         Performs warping on an image
         """
+        with torch.no_grad():
+            B, C, H, W = image.size()
 
-        new_img = torch.zeros(img.size()).to(DEVICE)
-        *_, height, width = img.size()
+            image_inds = torch.arange(H * W, dtype=torch.int64)
+            image_inds = image_inds.repeat(B, 1)
 
-        for i in range(height):
-            for j in range(width):
-                flow_ij = flow[:, :, i, j]  # -> N x 2
-                FLOWY = flow_ij[0]  # N x 1
-                FLOWX = flow_ij[1]  # N x 1
+            has_flow = torch.sum(torch.abs(flow), dim=1, dtype=torch.bool).view((B, H * W))
+            warped_inds = torch.zeros((B, H * W), dtype=torch.int64)
 
-                for n, (flowx, flowy) in enumerate(zip(FLOWX.tolist(), FLOWY.tolist())):
-                    x = round(flowx + i)
-                    y = round(flowy + j)
-                    if 0 <= x < height and 0 <= y < width:
-                        rgb = img[n, :, i, j]
-                        new_img[n, :, x, y] = rgb
-                    else:
-                        pass
+            warped_inds[has_flow] += image_inds[has_flow]
 
-        # interpolation
-        if interp:
-            new_img = F.interpolate(new_img, size=(384, 512), mode="bilinear")
+            flow_ind_shift = torch.tensor((flow[:, 0, :, :] * H + flow[:, 1, :, :]),
+                                          dtype=torch.int64).view(B, H * W)
+            warped_inds[has_flow] += flow_ind_shift[has_flow]
+            warped_inds = torch.clamp(warped_inds, 0, H*W-1)
+            # batch offset
+            offset = torch.cat([torch.ones(H * W, dtype=torch.int64) * H * W * i for i in range(B)]).view((B, H * W))
+            warped_inds = torch.flatten(warped_inds + offset)
+            image_inds = torch.flatten(image_inds + offset)
 
-        return new_img
+            warped_im = torch.zeros((B, C, H, W))
+            for channel in (0, 1, 2):
+                im_channel = torch.flatten(image[:, channel, :, :])
+                warped_channel = torch.flatten(warped_im[:, channel, :, :])
+                warped_channel[warped_inds] = im_channel[image_inds]
+                warped_im[:, channel, :, :] = warped_channel.view((B, H, W))
+
+        return warped_im
 
 
 class FlownetStacked(Base):
@@ -79,9 +83,9 @@ class FlownetStacked(Base):
 
         if isinstance(first_model, type):  # passed a CLASS and not an INSTANCE
             first_model = first_model()
-            if frozen[0]:
-                for parameter in first_model.parameters():
-                    parameter.requires_grad = False
+        if frozen[0]:
+            for parameter in first_model.parameters():
+                parameter.requires_grad = False
 
         models = nn.ModuleList()
         models.append(first_model)
@@ -92,7 +96,7 @@ class FlownetStacked(Base):
 
             models.append(arg)
 
-            if frozen[i + 1]:
+            if frozen[i+1]:
                 for parameter in arg.parameters:
                     parameter.requires_grad = False
 
