@@ -11,6 +11,9 @@ For training two whole flownets stacked together
 """
 
 NET1 = "FlowNetC_FlyingChairs_scheduler_long"
+TRAINING_NET2 = True
+
+
 
 PARAMETERS_DIR = "weights"
 def load_net1(name):
@@ -44,8 +47,9 @@ class FlownetCSSWarped(Base):
         self.net2 = FlowNetS(in_channels=12)
 
         # # Uncomment when training net3 final training
-        # for parameter in self.net2.parameters():
-        #     parameter.requires_grad = False
+        if not TRAINING_NET2:
+            for parameter in self.net2.parameters():
+                parameter.requires_grad = False
 
         self.net3 = FlowNetS(in_channels=12)
         self.warping = WarpingLayer()
@@ -59,12 +63,13 @@ class FlownetCSSWarped(Base):
         flow2 = self.net2(x1_warped)
 
         # Comment out when training net 3
-        # return flow2
+        if TRAINING_NET2:
+            return flow2
 
         x2 = torch.cat([x, flow2], dim=1)
         x2_warped = self.warping.forward(x2)
-        prediction = self.net3(x2_warped)
-        return prediction
+        flow3 = self.net3(x2_warped)
+        return flow3
 
 
 
