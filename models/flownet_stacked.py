@@ -60,6 +60,9 @@ class WarpingLayer(nn.Module):
 
 
 class FlownetStacked(Base):
+    
+    title = "flownet-stacked"
+    
     def __init__(self, *args, warping=False, frozen=None):
         super().__init__()
 
