@@ -48,7 +48,8 @@ def sintel(root=None, split="train", pass_name="clean", interpolate=True):
     dset = SintelModified(root, split=split, pass_name=pass_name, interpolate=interpolate)
     return dset
 
-def hd1k(root=None, split="train", pass_name="clean", interpolate=True):
+
+def hd1k(root=None, split="train", interpolate=True):
     """
     Gets a sintel dataset object
     :param root:
@@ -133,7 +134,7 @@ class HD1KModified(HD1K):
         super().__init__(*args, **kwargs)
 
     def __getitem__(self, index):
-        im1, im2, flow = super().__getitem__(index)
+        im1, im2, flow, *_ = super().__getitem__(index)
 
         im_transform = T.Compose([
             T.functional.pil_to_tensor,
