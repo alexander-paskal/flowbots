@@ -43,7 +43,7 @@ def sintel(root=None, split="train", pass_name="clean", interpolate=True):
         except FileNotFoundError:
             print("Could not load flying chairs data - config.json not found")
             return
-        root = cfg["flying_chairs"]
+        root = cfg["sintel"]
 
     dset = SintelModified(root, split=split, pass_name=pass_name, interpolate=interpolate)
     return dset
@@ -64,7 +64,7 @@ def hd1k(root=None, split="train", interpolate=True):
         except FileNotFoundError:
             print("Could not load flying chairs data - config.json not found")
             return
-        root = cfg["flying_chairs"]
+        root = cfg["hd1k"]
 
     dset = HD1KModified(root, split=split, interpolate=interpolate)
     return dset
@@ -118,8 +118,10 @@ class SintelModified(Sintel):
         # for sintel
         flow = F.interpolate(flow[None, :, :, :], size=LABEL_SIZE).squeeze()
 
-        # flow[0, :, :] /= im1.size(1)
-        # flow[1, :, :] /= im1.size(2)
+        h_target, w_target = INPUT_SIZE
+
+        flow[0, :, :] /= (im1.size(1)/h_target)
+        flow[1, :, :] /= (im1.size(2)/w_target)
 
         im_concat = torch.cat([im1, im2], dim=0)
 
@@ -148,10 +150,22 @@ class HD1KModified(HD1K):
         flow = torch.transpose(flow, 0, 1)
         flow = torch.transpose(flow, 1, 2)
 
+        # # modify the image values
+        # im1[0, :, :] = torch.clamp(im1[0, :, :] + 0.3, 0, 1)
+        # im1[1, :, :] = torch.clamp(im1[1, :, :] + 0.1, 0, 1)
+        # im1[2, :, :] = torch.clamp(im1[2, :, :] - 0.1, 0, 1)
+        #
+        # im2[0, :, :] = torch.clamp(im2[0, :, :] + 0.3, 0, 1)
+        # im2[1, :, :] = torch.clamp(im2[1, :, :] + 0.1, 0, 1)
+        # im2[2, :, :] = torch.clamp(im2[2, :, :] - 0.1, 0, 1)
+
+
         flow = F.interpolate(flow[None, :, :, :], size=LABEL_SIZE).squeeze()
 
-        # flow[0, :, :] /= im1.size(1)
-        # flow[1, :, :] /= im1.size(2)
+        h_target, w_target = INPUT_SIZE
+
+        flow[0, :, :] /= (im1.size(1)/h_target)
+        flow[1, :, :] /= (im1.size(2)/w_target)
 
         im_concat = torch.cat([im1, im2], dim=0)
 
