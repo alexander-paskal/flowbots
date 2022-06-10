@@ -1,7 +1,7 @@
 from models import lookup
 import torch
 from torch.utils.data import DataLoader
-from datasets import flying_chairs
+from datasets import flying_chairs, sintel, hd1k
 from utils import HardwareManager, train, initialize, save_model, load_model
 import sys
 import math
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--learning-rate', '-lr', default=1e-3, type=float, help='the learning rate to be used')
     parser.add_argument('--verbose', '-v', default='true', help='prints out the loss every 10 minibatches')
     parser.add_argument('--grad-accum', '-g', default=1, type=int, help='The gradient accumulation rate. Default is 1')
-
+    parser.add_argument('--dataset', '-d', default="flying-chairs", help='the dataset to train on')
     args = parser.parse_args()
 
     EPOCHS = args.epochs
@@ -32,12 +32,22 @@ if __name__ == '__main__':
     LEARNING_RATE = args.learning_rate
     BATCH_SIZE = args.batch_size
 
+
+    DATASET = {
+        "flying-chairs": flying_chairs,
+        "sintel": sintel,
+        "hd1k": hd1k
+    }[args.dataset]
+
     print("loading dataset")
-    train_dataset = flying_chairs(split="train")
+    train_dataset = DATASET(split="train")
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
-    val_dataset = flying_chairs(split="val")
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+    if args.dataset == "flying-chairs":
+        val_dataset = flying_chairs(split="val")
+        val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+    else:
+        val_loader= None
 
     print(f"Iterations per training epoch: {int(math.ceil(len(train_dataset) / BATCH_SIZE))}")
 
