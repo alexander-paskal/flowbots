@@ -59,7 +59,7 @@ class WarpingLayer:
                 im_channel = torch.flatten(image[:, channel, :, :])
                 warped_channel = torch.flatten(warped_im[:, channel, :, :])
                 warped_channel[warped_inds] = im_channel[image_inds]
-                warped_im[:, channel, :, :] = warped_channel.view((B, H, W))
+                warped_im[:, channel, :, :] = warped_channel.view((B, H, W)).clone()
 
         # del warped_inds, image_inds, has_flow, warped_channel, im_channel, offset, flow_ind_shift
 

@@ -14,7 +14,6 @@ NET1 = "FlowNetC_FlyingChairs_scheduler_long"
 TRAINING_NET2 = True
 
 
-
 PARAMETERS_DIR = "weights"
 def load_net1(name):
     """
@@ -22,7 +21,6 @@ def load_net1(name):
     :param name:
     :return:
     """
-
 
     model_cls = FlowNetC
     model = model_cls()
