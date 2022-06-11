@@ -131,7 +131,7 @@ def train(model, optimizer, loader, epochs=1, print_every=1, grad_accum=1, val_l
         model.load_state_dict(cur_params)
 
 
-def evaluate(loader, model, verbose=False):
+def evaluate(loader, model, verbose=False, batches=None):
     """
     Evaluates a model on a dataset
     :param loader:
@@ -158,6 +158,9 @@ def evaluate(loader, model, verbose=False):
                 print(f"Iteration {i}, loss {loss}")
             f1_ratio = f1_all(pred, y).item()
             f1_ratios.append(f1_ratio)
+
+            if batches is not None and i >= batches:
+                break
 
         avg_loss = torch.tensor(losses).mean().item()
         avg_percent = torch.tensor(f1_ratios).mean().item()
